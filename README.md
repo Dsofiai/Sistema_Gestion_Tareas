@@ -172,5 +172,5 @@ En caso de requerir soporte para miles de usuarios activos:
 ---
 
 ## Autor
-
+@Danna Sofia Imbachi
 Desarrollado como prueba técnica para evaluación.
