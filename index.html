@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SGT — Sistema de Gestión de Tareas</title>
+  <style>
+    :root{
+      --bg: #071426;          /* azul muy oscuro */
+      --panel: #0b1f36;       /* azul oscuro */
+      --panel2:#0d2745;       /* azul oscuro 2 */
+      --border:#163455;       /* borde */
+      --text:#eaf2ff;         /* texto claro */
+      --muted:#b7c6dd;        /* texto secundario */
+      --brand:#3aa6ff;        /* azul claro */
+      --brand2:#1e7bd6;       /* azul medio */
+      --good:#39d98a;
+      --warn:#ffcc66;
+      --bad:#ff5c7a;
+      --shadow: 0 14px 40px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 10% 0%, rgba(58,166,255,.18), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(30,123,214,.18), transparent 65%),
+        radial-gradient(900px 500px at 50% 100%, rgba(58,166,255,.10), transparent 55%),
+        var(--bg);
+    }
+
+    a{ color:var(--brand); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:28px 18px 48px;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .logo{
+      width:42px;height:42px;border-radius:12px;
+      background: linear-gradient(135deg, rgba(58,166,255,.95), rgba(30,123,214,.85));
+      box-shadow: 0 10px 25px rgba(58,166,255,.18);
+      display:grid;place-items:center;
+      font-weight:800;
+      letter-spacing:.5px;
+    }
+    .title h1{
+      margin:0;
+      font-size:18px;
+      line-height:1.2;
+      letter-spacing:.2px;
+    }
+    .title p{
+      margin:2px 0 0;
+      color:var(--muted);
+      font-size:12.5px;
+    }
+
+    .top-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--border);
+      border-radius:999px;
+      color:var(--muted);
+      font-size:12.5px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:16px;
+      margin-top:14px;
+    }
+
+    @media (max-width: 900px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .card-h{
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      background: rgba(255,255,255,.03);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .card-h h2{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.2px;
+    }
+    .card-h small{ color:var(--muted); }
+
+    .card-b{ padding:16px; }
+
+    .row{ display:flex; gap:10px; }
+    .row > *{ flex:1; }
+
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+    input, select, textarea{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(6,16,30,.65);
+      color:var(--text);
+      outline:none;
+    }
+    textarea{ min-height:90px; resize:vertical; }
+    input::placeholder, textarea::placeholder{ color: rgba(183,198,221,.6); }
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:650;
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      transition: transform .05s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+    }
+    .btn:hover{ background: rgba(255,255,255,.09); border-color: rgba(255,255,255,.14); }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn-primary{
+      background: linear-gradient(135deg, rgba(58,166,255,.95), rgba(30,123,214,.9));
+      border-color: rgba(58,166,255,.35);
+      box-shadow: 0 12px 30px rgba(58,166,255,.18);
+    }
+    .btn-primary:hover{ filter: brightness(1.03); }
+
+    .btn-ghost{
+      background: transparent;
+      border:1px solid rgba(255,255,255,.12);
+      color: var(--muted);
+    }
+
+    .btn-danger{
+      background: rgba(255,92,122,.15);
+      border-color: rgba(255,92,122,.30);
+      color: #ffd5dd;
+    }
+
+    .muted{ color:var(--muted); font-size:12.5px; }
+    .hint{ color: rgba(183,198,221,.85); font-size:12px; margin-top:8px; }
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .tab{
+      flex:1;
+      text-align:center;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab.active{
+      background: rgba(58,166,255,.12);
+      border-color: rgba(58,166,255,.35);
+      color: var(--text);
+    }
+
+    .msg{
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size:12.5px;
+      display:none;
+      white-space:pre-wrap;
+    }
+    .msg.ok{ display:block; border-color: rgba(57,217,138,.35); background: rgba(57,217,138,.10); color: #c9ffe5; }
+    .msg.err{ display:block; border-color: rgba(255,92,122,.35); background: rgba(255,92,122,.10); color: #ffd0d8; }
+    .msg.warn{ display:block; border-color: rgba(255,204,102,.35); background: rgba(255,204,102,.10); color: #fff0cd; }
+
+    /* Tasks */
+    .toolbar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .list{
+      margin-top:14px;
+      display:grid;
+      gap:10px;
+    }
+
+    .task{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      border-radius: 14px;
+      padding:12px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .task h3{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.1px;
+    }
+    .task p{
+      margin:6px 0 0;
+      color: var(--muted);
+      font-size:12.5px;
+      line-height:1.35;
+    }
+
+    .badges{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+    .badge{
+      font-size:11px;
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      color: var(--muted);
+      background: rgba(255,255,255,.03);
+    }
+    .badge.status-pendiente{ border-color: rgba(255,204,102,.35); background: rgba(255,204,102,.10); color:#ffe7b2; }
+    .badge.status-en_progreso{ border-color: rgba(58,166,255,.35); background: rgba(58,166,255,.10); color:#d6efff; }
+    .badge.status-completada{ border-color: rgba(57,217,138,.35); background: rgba(57,217,138,.10); color:#c9ffe5; }
+
+    .task-actions{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    /* Modal */
+    .modal-backdrop{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    .modal{
+      width:min(520px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modal-h{
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      background: rgba(255,255,255,.03);
+    }
+    .modal-h strong{ font-size:14px; }
+    .modal-b{ padding:16px; }
+    .modal-f{
+      padding:14px 16px;
+      border-top:1px solid rgba(255,255,255,.06);
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      background: rgba(255,255,255,.02);
+    }
+
+    .hidden{ display:none !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">SGT</div>
+        <div class="title">
+          <h1>Sistema de Gestión de Tareas</h1>
+          <p>Auth (JWT) + CRUD de tareas (SQLite) — interfaz básica</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="pill" id="pillStatus">🔒 No autenticado</div>
+        <button class="btn btn-ghost hidden" id="btnLogout">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Auth card -->
+      <section class="card" id="authCard">
+        <div class="card-h">
+          <h2>Acceso</h2>
+          <small>Register / Login</small>
+        </div>
+        <div class="card-b">
+          <div class="tabs">
+            <div class="tab active" id="tabLogin">Iniciar sesión</div>
+            <div class="tab" id="tabRegister">Registrarme</div>
+          </div>
+
+          <!-- Login -->
+          <form id="formLogin">
+            <div class="row">
+              <div>
+                <label for="loginUser">Username</label>
+                <input id="loginUser" placeholder="sofi" autocomplete="username" />
+              </div>
+            </div>
+            <div style="margin-top:10px;">
+              <label for="loginPass">Password</label>
+              <input id="loginPass" type="password" placeholder="••••••" autocomplete="current-password" />
+            </div>
+
+            <div style="margin-top:12px; display:flex; gap:10px;">
+              <button type="submit" class="btn btn-primary" style="flex:1;">Entrar</button>
+              <button type="button" class="btn btn-ghost" id="btnFillDemo">Demo</button>
+            </div>
+            <div class="hint">Tip: luego de entrar, el token queda guardado en el navegador.</div>
+          </form>
+
+          <!-- Register -->
+          <form id="formRegister" class="hidden">
+            <div class="row">
+              <div>
+                <label for="regUser">Username</label>
+                <input id="regUser" placeholder="sofi" autocomplete="username" />
+              </div>
+            </div>
+            <div style="margin-top:10px;">
+              <label for="regEmail">Email (opcional)</label>
+              <input id="regEmail" placeholder="sofi@test.com" autocomplete="email" />
+            </div>
+            <div style="margin-top:10px;">
+              <label for="regPass">Password</label>
+              <input id="regPass" type="password" placeholder="mínimo 6 caracteres" autocomplete="new-password" />
+            </div>
+            <div style="margin-top:12px;">
+              <button type="submit" class="btn btn-primary" style="width:100%;">Crear cuenta</button>
+            </div>
+            <div class="hint">La contraseña se guarda hasheada con bcrypt (no se almacena en texto plano).</div>
+          </form>
+
+          <div class="msg" id="authMsg"></div>
+        </div>
+      </section>
+
+      <!-- Tasks card -->
+      <section class="card" id="tasksCard">
+        <div class="card-h">
+          <h2>Tareas</h2>
+          <small>Solo tus tareas</small>
+        </div>
+        <div class="card-b">
+          <div class="toolbar">
+            <div style="flex: 1; min-width: 220px;">
+              <label for="taskTitle">Título</label>
+              <input id="taskTitle" placeholder="Ej: Estudiar C4" />
+            </div>
+            <div style="min-width: 180px;">
+              <label for="taskStatus">Estado</label>
+              <select id="taskStatus">
+                <option value="pendiente">pendiente</option>
+                <option value="en_progreso">en_progreso</option>
+                <option value="completada">completada</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:10px;">
+            <label for="taskDesc">Descripción (opcional)</label>
+            <textarea id="taskDesc" placeholder="Describe tu tarea..."></textarea>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <div>
+              <label for="taskDue">Fecha de vencimiento (opcional)</label>
+              <input id="taskDue" type="date" />
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn btn-primary" id="btnCreateTask" style="width:100%;">Crear tarea</button>
+            </div>
+          </div>
+
+          <div class="msg" id="taskMsg"></div>
+
+          <div style="margin-top:14px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div class="muted" id="tasksCount">0 tareas</div>
+            <button class="btn btn-ghost" id="btnRefresh">Actualizar</button>
+          </div>
+
+          <div class="list" id="taskList"></div>
+
+          <div class="hint" style="margin-top:10px;">
+            Seguridad: todas las operaciones de tareas están protegidas por JWT y filtradas por <code>userId</code> (ownership).
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Modal Edit -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+      <div class="modal-h">
+        <strong>Editar tarea</strong>
+        <button class="btn btn-ghost" id="btnCloseModal">Cerrar</button>
+      </div>
+      <div class="modal-b">
+        <input type="hidden" id="editId" />
+        <div>
+          <label for="editTitle">Título</label>
+          <input id="editTitle" />
+        </div>
+        <div style="margin-top:10px;">
+          <label for="editDesc">Descripción</label>
+          <textarea id="editDesc"></textarea>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <label for="editStatus">Estado</label>
+            <select id="editStatus">
+              <option value="pendiente">pendiente</option>
+              <option value="en_progreso">en_progreso</option>
+              <option value="completada">completada</option>
+            </select>
+          </div>
+          <div>
+            <label for="editDue">Vencimiento</label>
+            <input id="editDue" type="date" />
+          </div>
+        </div>
+        <div class="msg" id="editMsg"></div>
+      </div>
+      <div class="modal-f">
+        <button class="btn btn-ghost" id="btnCancelEdit">Cancelar</button>
+        <button class="btn btn-primary" id="btnSaveEdit">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ====== Config ======
+    const API_BASE = "http://localhost:3000";
+
+    // ====== Helpers ======
+    const $ = (id) => document.getElementById(id);
+
+    function setMsg(el, type, text){
+      el.className = "msg " + (type || "");
+      el.textContent = text || "";
+      el.style.display = text ? "block" : "none";
+    }
+
+    function getToken(){
+      return localStorage.getItem("sgt_token");
+    }
+
+    function setToken(token){
+      if(token) localStorage.setItem("sgt_token", token);
+      else localStorage.removeItem("sgt_token");
+    }
+
+    function authHeaders(){
+      const token = getToken();
+      return token ? { "Authorization": "Bearer " + token } : {};
+    }
+
+    function toISODate(value){
+      // value can be Date, ISO string, or null
+      if(!value) return "";
+      const d = new Date(value);
+      if(Number.isNaN(d.getTime())) return "";
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function badgeClass(status){
+      if(status === "pendiente") return "status-pendiente";
+      if(status === "en_progreso") return "status-en_progreso";
+      if(status === "completada") return "status-completada";
+      return "";
+    }
+
+    async function api(path, { method="GET", body=null, headers={} } = {}){
+      const res = await fetch(API_BASE + path, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          ...headers
+        },
+        body: body ? JSON.stringify(body) : null
+      });
+
+      const text = await res.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch { data = { raw: text }; }
+
+      if(!res.ok){
+        const msg = (data && (data.error || data.message)) ? (data.error || data.message) : `Error HTTP ${res.status}`;
+        const err = new Error(msg);
+        err.status = res.status;
+        err.data = data;
+        throw err;
+      }
+      return data;
+    }
+
+    // ====== UI State ======
+    function setAuthedUI(isAuthed){
+      $("btnLogout").classList.toggle("hidden", !isAuthed);
+      $("authCard").classList.toggle("hidden", isAuthed);
+      $("pillStatus").textContent = isAuthed ? "🔓 Autenticado" : "🔒 No autenticado";
+      if(isAuthed){
+        setMsg($("authMsg"), "", "");
+        refreshTasks().catch(()=>{});
+      } else {
+        $("taskList").innerHTML = "";
+        $("tasksCount").textContent = "0 tareas";
+      }
+    }
+
+    // ====== Auth Tabs ======
+    function setTab(tab){
+      const loginActive = tab === "login";
+      $("tabLogin").classList.toggle("active", loginActive);
+      $("tabRegister").classList.toggle("active", !loginActive);
+      $("formLogin").classList.toggle("hidden", !loginActive);
+      $("formRegister").classList.toggle("hidden", loginActive);
+      setMsg($("authMsg"), "", "");
+    }
+
+    $("tabLogin").addEventListener("click", () => setTab("login"));
+    $("tabRegister").addEventListener("click", () => setTab("register"));
+
+    // Demo fill
+    $("btnFillDemo").addEventListener("click", () => {
+      $("loginUser").value = "sofi";
+      $("loginPass").value = "123456";
+      setMsg($("authMsg"), "warn", "Demo cargado. Ajusta user/pass si es necesario.");
+    });
+
+    // ====== Register ======
+    $("formRegister").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = $("regUser").value.trim();
+      const email = $("regEmail").value.trim();
+      const password = $("regPass").value;
+
+      if(!username || !password){
+        return setMsg($("authMsg"), "err", "username y password son requeridos.");
+      }
+      if(password.length < 6){
+        return setMsg($("authMsg"), "err", "La contraseña debe tener al menos 6 caracteres.");
+      }
+
+      try{
+        await api("/auth/register", {
+          method:"POST",
+          body:{ username, email: email || null, password }
+        });
+        setMsg($("authMsg"), "ok", "Usuario creado. Ahora inicia sesión.");
+        setTab("login");
+        $("loginUser").value = username;
+        $("loginPass").value = password;
+      }catch(err){
+        setMsg($("authMsg"), "err", err.message);
+      }
+    });
+
+    // ====== Login ======
+    $("formLogin").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = $("loginUser").value.trim();
+      const password = $("loginPass").value;
+
+      if(!username || !password){
+        return setMsg($("authMsg"), "err", "Debes ingresar username y password.");
+      }
+
+      try{
+        const data = await api("/auth/login", {
+          method:"POST",
+          body:{ username, password }
+        });
+        setToken(data.token);
+        setMsg($("authMsg"), "ok", "Login correcto.");
+        setAuthedUI(true);
+      }catch(err){
+        setToken(null);
+        setAuthedUI(false);
+        setMsg($("authMsg"), "err", err.message);
+      }
+    });
+
+    // ====== Logout ======
+    $("btnLogout").addEventListener("click", () => {
+      setToken(null);
+      setAuthedUI(false);
+      setMsg($("taskMsg"), "", "");
+    });
+
+    // ====== Tasks ======
+    $("btnRefresh").addEventListener("click", () => {
+      refreshTasks().catch(()=>{});
+    });
+
+    $("btnCreateTask").addEventListener("click", async (e) => {
+      e.preventDefault();
+      setMsg($("taskMsg"), "", "");
+
+      const title = $("taskTitle").value.trim();
+      const description = $("taskDesc").value.trim();
+      const status = $("taskStatus").value;
+      const dueDate = $("taskDue").value ? $("taskDue").value : null;
+
+      if(!getToken()){
+        return setMsg($("taskMsg"), "err", "Debes iniciar sesión para crear tareas.");
+      }
+      if(!title){
+        return setMsg($("taskMsg"), "err", "El título es obligatorio.");
+      }
+
+      try{
+        const created = await api("/tareas", {
+          method:"POST",
+          headers: authHeaders(),
+          body: { title, description: description || null, status, dueDate }
+        });
+
+        $("taskTitle").value = "";
+        $("taskDesc").value = "";
+        $("taskStatus").value = "pendiente";
+        $("taskDue").value = "";
+
+        setMsg($("taskMsg"), "ok", `Tarea creada (id: ${created.id}).`);
+        await refreshTasks();
+      }catch(err){
+        setMsg($("taskMsg"), "err", err.message);
+      }
+    });
+
+    async function refreshTasks(){
+      if(!getToken()){
+        $("taskList").innerHTML = "";
+        $("tasksCount").textContent = "0 tareas";
+        return;
+      }
+      setMsg($("taskMsg"), "", "");
+      try{
+        const tasks = await api("/tareas", { headers: authHeaders() });
+        renderTasks(tasks);
+      }catch(err){
+        // Si token inválido, cerrar sesión de forma amable
+        if(err.status === 401){
+          setToken(null);
+          setAuthedUI(false);
+          setMsg($("authMsg"), "err", "Sesión expirada. Inicia sesión nuevamente.");
+          return;
+        }
+        setMsg($("taskMsg"), "err", err.message);
+      }
+    }
+
+    function renderTasks(tasks){
+      $("tasksCount").textContent = `${tasks.length} ${tasks.length === 1 ? "tarea" : "tareas"}`;
+      const root = $("taskList");
+      root.innerHTML = "";
+
+      if(tasks.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "No tienes tareas aún. Crea la primera arriba 🙂";
+        root.appendChild(empty);
+        return;
+      }
+
+      for(const t of tasks){
+        const el = document.createElement("div");
+        el.className = "task";
+
+        const left = document.createElement("div");
+        left.style.flex = "1";
+
+        const h = document.createElement("h3");
+        h.textContent = t.title;
+
+        const p = document.createElement("p");
+        p.textContent = t.description ? t.description : "Sin descripción.";
+
+        const badges = document.createElement("div");
+        badges.className = "badges";
+
+        const b1 = document.createElement("span");
+        b1.className = `badge ${badgeClass(t.status)}`;
+        b1.textContent = `Estado: ${t.status}`;
+
+        const b2 = document.createElement("span");
+        b2.className = "badge";
+        b2.textContent = `ID: ${t.id}`;
+
+        badges.appendChild(b1);
+        badges.appendChild(b2);
+
+        if(t.dueDate){
+          const b3 = document.createElement("span");
+          b3.className = "badge";
+          b3.textContent = `Vence: ${toISODate(t.dueDate)}`;
+          badges.appendChild(b3);
+        }
+
+        left.appendChild(h);
+        left.appendChild(p);
+        left.appendChild(badges);
+
+        const actions = document.createElement("div");
+        actions.className = "task-actions";
+
+        const btnEdit = document.createElement("button");
+        btnEdit.className = "btn";
+        btnEdit.textContent = "Editar";
+        btnEdit.addEventListener("click", () => openEditModal(t));
+
+        const btnDel = document.createElement("button");
+        btnDel.className = "btn btn-danger";
+        btnDel.textContent = "Eliminar";
+        btnDel.addEventListener("click", async () => {
+          const ok = confirm(`¿Eliminar la tarea "${t.title}"?`);
+          if(!ok) return;
+          try{
+            await api(`/tareas/${t.id}`, { method:"DELETE", headers: authHeaders() });
+            setMsg($("taskMsg"), "ok", "Tarea eliminada.");
+            await refreshTasks();
+          }catch(err){
+            setMsg($("taskMsg"), "err", err.message);
+          }
+        });
+
+        actions.appendChild(btnEdit);
+        actions.appendChild(btnDel);
+
+        el.appendChild(left);
+        el.appendChild(actions);
+        root.appendChild(el);
+      }
+    }
+
+    // ====== Modal Edit ======
+    function openEditModal(task){
+      $("editId").value = task.id;
+      $("editTitle").value = task.title || "";
+      $("editDesc").value = task.description || "";
+      $("editStatus").value = task.status || "pendiente";
+      $("editDue").value = task.dueDate ? toISODate(task.dueDate) : "";
+      setMsg($("editMsg"), "", "");
+      $("modalBackdrop").style.display = "flex";
+    }
+
+    function closeEditModal(){
+      $("modalBackdrop").style.display = "none";
+    }
+
+    $("btnCloseModal").addEventListener("click", closeEditModal);
+    $("btnCancelEdit").addEventListener("click", closeEditModal);
+    $("modalBackdrop").addEventListener("click", (e) => {
+      if(e.target === $("modalBackdrop")) closeEditModal();
+    });
+
+    $("btnSaveEdit").addEventListener("click", async () => {
+      const id = $("editId").value;
+      const title = $("editTitle").value.trim();
+      const description = $("editDesc").value.trim();
+      const status = $("editStatus").value;
+      const dueDate = $("editDue").value ? $("editDue").value : null;
+
+      if(!title) return setMsg($("editMsg"), "err", "El título no puede quedar vacío.");
+
+      try{
+        await api(`/tareas/${id}`, {
+          method:"PUT",
+          headers: authHeaders(),
+          body: {
+            title,
+            description: description || null,
+            status,
+            dueDate
+          }
+        });
+        setMsg($("editMsg"), "ok", "Cambios guardados.");
+        await refreshTasks();
+        setTimeout(closeEditModal, 450);
+      }catch(err){
+        setMsg($("editMsg"), "err", err.message);
+      }
+    });
+
+    // ====== Init ======
+    window.addEventListener("load", () => {
+      const token = getToken();
+      setAuthedUI(!!token);
+      setTab("login");
+    });
+  </script>
+</body>
+</html>

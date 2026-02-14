@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SGT - Tareas</title>
+
+<style>
+
+body{
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg,#4e73df,#1cc88a);
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin:0;
+}
+
+.container{
+  background:white;
+  padding:35px;
+  border-radius:14px;
+  width:400px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.2);
+}
+
+h1{
+  text-align:center;
+  color:#333;
+}
+
+input{
+  width:100%;
+  padding:11px;
+  margin:7px 0;
+  border-radius:7px;
+  border:1px solid #ccc;
+}
+
+button{
+  width:100%;
+  padding:11px;
+  margin-top:8px;
+  border:none;
+  border-radius:7px;
+  background:#4e73df;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+button:hover{
+  background:#2e59d9;
+}
+
+.link{
+  text-align:center;
+  margin-top:10px;
+}
+
+.link a{
+  color:#4e73df;
+  cursor:pointer;
+  font-weight:bold;
+  text-decoration:none;
+}
+
+ul{
+  padding-left:0;
+}
+
+li{
+  list-style:none;
+  background:#f4f6fb;
+  margin:6px 0;
+  padding:10px;
+  border-radius:7px;
+}
+
+.logout{
+  background:#e74a3b;
+}
+
+.logout:hover{
+  background:#c0392b;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>SGT - Mis Tareas</h1>
+
+<!-- AUTH -->
+<div id="auth">
+
+  <!-- LOGIN -->
+  <div id="loginBox">
+    <h2>Iniciar Sesión</h2>
+
+    <input id="logUser" placeholder="Usuario">
+    <input id="logPass" type="password" placeholder="Contraseña">
+
+    <button onclick="login()">Entrar</button>
+
+    <div class="link">
+      ¿No estás registrado?
+      <a onclick="showRegister()">Crear cuenta</a>
+    </div>
+  </div>
+
+  <!-- REGISTRO -->
+  <div id="registerBox" style="display:none;">
+    <h2>Crear Cuenta</h2>
+
+    <input id="regUser" placeholder="Usuario">
+    <input id="regPass" type="password" placeholder="Contraseña">
+
+    <button onclick="register()">Registrarme</button>
+
+    <div class="link">
+      ¿Ya tienes cuenta?
+      <a onclick="showLogin()">Inicia sesión</a>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- TAREAS -->
+<div id="tasksDiv" style="display:none;">
+
+  <button class="logout" onclick="logout()">Cerrar Sesión</button>
+
+  <h2>Tus Listas</h2>
+  <ul id="tasksList"></ul>
+
+  <h3>Agregar Tarea</h3>
+
+  <input id="taskTitle" placeholder="Título">
+  <input id="taskDesc" placeholder="Descripción">
+
+  <button onclick="addTask()">Agregar</button>
+
+</div>
+
+</div>
+
+<script>
+
+let token = '';
+
+/* CAMBIAR VISTAS */
+
+function showRegister(){
+  document.getElementById('loginBox').style.display='none';
+  document.getElementById('registerBox').style.display='block';
+}
+
+function showLogin(){
+  document.getElementById('loginBox').style.display='block';
+  document.getElementById('registerBox').style.display='none';
+}
+
+
+/* CREAR LISTA AUTOMÁTICA */
+
+async function ensureListExists(){
+
+  const res = await fetch('http://localhost:3000/lists',{
+    headers:{ Authorization:`Bearer ${token}`}
+  });
+
+  const lists = await res.json();
+
+  if(!lists.length){
+
+    await fetch('http://localhost:3000/lists',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        Authorization:`Bearer ${token}`
+      },
+      body: JSON.stringify({
+        name:"Mi Lista"
+      })
+    });
+
+  }
+}
+
+
+/* REGISTER */
+
+async function register(){
+
+  const res = await fetch('http://localhost:3000/auth/register',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      username: regUser.value,
+      password: regPass.value
+    })
+  });
+
+  const data = await res.json();
+
+  if(data.error){
+    alert(data.error);
+    return;
+  }
+
+  alert("Usuario creado ✅ Ahora inicia sesión");
+  showLogin();
+}
+
+
+/* LOGIN */
+
+async function login(){
+
+  const res = await fetch('http://localhost:3000/auth/login',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      username: logUser.value,
+      password: logPass.value
+    })
+  });
+
+  const data = await res.json();
+
+  if(!data.token){
+    alert(data.error);
+    return;
+  }
+
+  token = data.token;
+
+  auth.style.display='none';
+  tasksDiv.style.display='block';
+
+  await ensureListExists(); // 🔥 evita el error de lista
+
+  loadLists();
+}
+
+
+/* CARGAR LISTAS */
+
+async function loadLists(){
+
+  const res = await fetch('http://localhost:3000/lists',{
+    headers:{ Authorization:`Bearer ${token}`}
+  });
+
+  const lists = await res.json();
+
+  tasksList.innerHTML='';
+
+  lists.forEach(list=>{
+    const li = document.createElement('li');
+    li.innerText = list.name;
+    tasksList.appendChild(li);
+  });
+
+}
+
+
+/* AGREGAR TAREA */
+
+async function addTask(){
+
+  const title = taskTitle.value;
+  const desc = taskDesc.value;
+
+  if(!title){
+    alert("El título es obligatorio");
+    return;
+  }
+
+  const resLists = await fetch('http://localhost:3000/lists',{
+    headers:{ Authorization:`Bearer ${token}`}
+  });
+
+  const lists = await resLists.json();
+  const listId = lists[0].id;
+
+  const res = await fetch(`http://localhost:3000/lists/${listId}/tasks`,{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      Authorization:`Bearer ${token}`
+    },
+    body: JSON.stringify({
+      title,
+      description:desc
+    })
+  });
+
+  const task = await res.json();
+
+  if(task.error){
+    alert(task.error);
+    return;
+  }
+
+  alert("Tarea creada ✅");
+
+  taskTitle.value='';
+  taskDesc.value='';
+}
+
+
+/* LOGOUT */
+
+function logout(){
+  token='';
+  auth.style.display='block';
+  tasksDiv.style.display='none';
+}
+
+</script>
+
+</body>
+</html>
